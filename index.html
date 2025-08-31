@@ -1286,7 +1286,7 @@
                     
                     const messagesWithContext = [...systemMessages, ...messages];
 
-                    const response = await fetch('/api/chat', {
+                    const response = await fetch('/.netlify/functions/chat', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${this.apiKeys.openrouter}`,
@@ -1354,7 +1354,7 @@
                 try {
                     const summaryPrompt = `请将以下对话内容总结为简洁的备忘录，保留关键信息和上下文：\n\n${messagesToSummarize.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}`;
                     
-                    const response = await fetch('/api/chat', {
+                    const response = await fetch('/.netlify/functions/chat', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${this.apiKeys.openrouter}`,
@@ -1553,7 +1553,7 @@
                     
                     const messagesWithContext = [...systemMessages, ...messages];
 
-                    const response = await fetch('/api/chat', {
+                    const response = await fetch('/.netlify/functions/chat', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${this.apiKeys.openrouter}`,
@@ -1691,7 +1691,7 @@
             // 执行搜索
             async performSearch(query) {
                 try {
-                    const response = await fetch('/api/search', {
+                    const response = await fetch('/.netlify/functions/search', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
