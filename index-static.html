@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .api-config {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .api-input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            placeholder-color: rgba(255, 255, 255, 0.7);
+            min-width: 200px;
+        }
+
+        .api-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .model-select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            min-width: 150px;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.assistant {
+            background: #f1f3f4;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            resize: none;
+            max-height: 120px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 95vh;
+                margin: 10px;
+            }
+            
+            .api-config {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .api-input, .model-select {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Chat Interface</h1>
+            <div class="api-config">
+                <input type="password" class="api-input" id="apiKey" placeholder="输入 OpenRouter API 密钥">
+                <select class="model-select" id="modelSelect">
+                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="openai/gpt-4o">GPT-4o</option>
+                    <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                    <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
+                    <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+                    <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="messages" id="messages"></div>
+            <div class="loading" id="loading">AI 正在思考中...</div>
+        </div>
+        
+        <div class="input-container">
+            <textarea class="message-input" id="messageInput" placeholder="输入您的消息..." rows="1"></textarea>
+            <button class="send-button" id="sendButton">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        class ChatApp {
+            constructor() {
+                this.messages = [];
+                this.apiKey = '';
+                this.currentModel = 'anthropic/claude-3.5-sonnet';
+                
+                this.initElements();
+                this.bindEvents();
+                this.loadFromStorage();
+            }
+
+            initElements() {
+                this.messagesContainer = document.getElementById('messages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.apiKeyInput = document.getElementById('apiKey');
+                this.modelSelect = document.getElementById('modelSelect');
+                this.loading = document.getElementById('loading');
+            }
+
+            bindEvents() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                this.apiKeyInput.addEventListener('input', (e) => {
+                    this.apiKey = e.target.value;
+                    this.saveToStorage();
+                });
+                
+                this.modelSelect.addEventListener('change', (e) => {
+                    this.currentModel = e.target.value;
+                    this.saveToStorage();
+                });
+
+                // 自动调整输入框高度
+                this.messageInput.addEventListener('input', () => {
+                    this.messageInput.style.height = 'auto';
+                    this.messageInput.style.height = this.messageInput.scrollHeight + 'px';
+                });
+            }
+
+            async sendMessage() {
+                const content = this.messageInput.value.trim();
+                if (!content || !this.apiKey) {
+                    if (!this.apiKey) {
+                        this.showError('请先输入 OpenRouter API 密钥');
+                    }
+                    return;
+                }
+
+                const userMessage = {
+                    role: 'user',
+                    content: content,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.messages.push(userMessage);
+                this.renderMessage(userMessage);
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+                this.setLoading(true);
+
+                try {
+                    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.apiKey}`,
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin,
+                            'X-Title': 'AI Chat Interface'
+                        },
+                        body: JSON.stringify({
+                            model: this.currentModel,
+                            messages: this.getRecentMessages(),
+                            temperature: 0.7,
+                            max_tokens: 2000
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    const assistantContent = data.choices[0]?.message?.content || '抱歉，没有收到有效回复。';
+
+                    const assistantMessage = {
+                        role: 'assistant',
+                        content: assistantContent,
+                        timestamp: new Date().toISOString(),
+                        model: this.currentModel
+                    };
+
+                    this.messages.push(assistantMessage);
+                    this.renderMessage(assistantMessage);
+                    this.saveToStorage();
+                } catch (error) {
+                    this.showError(`请求失败: ${error.message}`);
+                    console.error('API调用错误:', error);
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            renderMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.role}`;
+                messageDiv.textContent = message.content;
+                
+                this.messagesContainer.appendChild(messageDiv);
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+
+            getRecentMessages() {
+                // 保留最近10条消息作为上下文
+                return this.messages.slice(-10);
+            }
+
+            setLoading(isLoading) {
+                this.loading.style.display = isLoading ? 'block' : 'none';
+                this.sendButton.disabled = isLoading;
+                this.messageInput.disabled = isLoading;
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = message;
+                
+                this.messagesContainer.appendChild(errorDiv);
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                
+                // 5秒后自动移除错误消息
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.parentNode.removeChild(errorDiv);
+                    }
+                }, 5000);
+            }
+
+            saveToStorage() {
+                const data = {
+                    apiKey: this.apiKey,
+                    currentModel: this.currentModel,
+                    messages: this.messages
+                };
+                localStorage.setItem('aiChatData', JSON.stringify(data));
+            }
+
+            loadFromStorage() {
+                try {
+                    const data = JSON.parse(localStorage.getItem('aiChatData') || '{}');
+                    
+                    if (data.apiKey) {
+                        this.apiKey = data.apiKey;
+                        this.apiKeyInput.value = this.apiKey;
+                    }
+                    
+                    if (data.currentModel) {
+                        this.currentModel = data.currentModel;
+                        this.modelSelect.value = this.currentModel;
+                    }
+                    
+                    if (data.messages && Array.isArray(data.messages)) {
+                        this.messages = data.messages;
+                        this.messages.forEach(message => this.renderMessage(message));
+                    }
+                } catch (error) {
+                    console.error('加载存储数据失败:', error);
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatApp();
+        });
+    </script>
+</body>
+</html>
