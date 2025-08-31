@@ -1286,11 +1286,13 @@
                     
                     const messagesWithContext = [...systemMessages, ...messages];
 
-                    const response = await fetch('/.netlify/functions/chat', {
+                    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${this.apiKeys.openrouter}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin,
+                            'X-Title': 'AI Chat Interface'
                         },
                         body: JSON.stringify({
                             model: this.currentModel,
@@ -1354,11 +1356,13 @@
                 try {
                     const summaryPrompt = `请将以下对话内容总结为简洁的备忘录，保留关键信息和上下文：\n\n${messagesToSummarize.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}`;
                     
-                    const response = await fetch('/.netlify/functions/chat', {
+                    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${this.apiKeys.openrouter}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin,
+                            'X-Title': 'AI Chat Interface'
                         },
                         body: JSON.stringify({
                             model: 'openai/gpt-4o-mini', // 使用性价比高的模型进行总结
@@ -1553,11 +1557,13 @@
                     
                     const messagesWithContext = [...systemMessages, ...messages];
 
-                    const response = await fetch('/.netlify/functions/chat', {
+                    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${this.apiKeys.openrouter}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin,
+                            'X-Title': 'AI Chat Interface'
                         },
                         body: JSON.stringify({
                             model: this.currentModel,
@@ -1691,6 +1697,9 @@
             // 执行搜索
             async performSearch(query) {
                 try {
+                    // 禁用搜索功能以避免CORS问题
+                    return null;
+                    /*
                     const response = await fetch('/.netlify/functions/search', {
                         method: 'POST',
                         headers: {
@@ -1704,7 +1713,8 @@
                     }
 
                     const data = await response.json();
-                    return data.results;
+                    return data;
+                    */
                 } catch (error) {
                     console.error('搜索错误:', error);
                     return null;
