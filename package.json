@@ -1,0 +1,17 @@
+{
+  "name": "ai-chat-interface",
+  "version": "1.0.0",
+  "description": "Multi-model AI chat interface with role customization and search integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["ai", "chat", "openrouter", "duckduckgo", "search"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
